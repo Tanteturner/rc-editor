@@ -7,4 +7,6 @@ export interface Theme {
     danger: string
     light: string
     dark: string
+    emphasis: string
+    border: string
 }

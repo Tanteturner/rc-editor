@@ -18,7 +18,9 @@ export class ThemeService {
       warning: style.getPropertyValue('--bs-warning'),
       danger: style.getPropertyValue('--bs-danger'),
       light: style.getPropertyValue('--bs-light'),
-      dark: style.getPropertyValue('--bs-dark')
+      dark: style.getPropertyValue('--bs-dark'),
+      emphasis: style.getPropertyValue('--bs-emphasis-color'),
+      border: style.getPropertyValue('--bs-border-color')
     };
   }
 

@@ -6,6 +6,7 @@ import { FileService } from '../../services/file.service';
 import { openRollercoasterFile, TrackPoint } from '../../models/openRollercoasterFile.interface';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CanvasControlsComponent } from "../canvas-controls/canvas-controls.component";
+import { Materials } from './materials';
 
 
 @Component({
@@ -16,36 +17,32 @@ import { CanvasControlsComponent } from "../canvas-controls/canvas-controls.comp
 })
 export class CanvasBoxComponent implements OnInit {
 
+  scene: THREE.Scene = new THREE.Scene;
+  camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+  renderer?: THREE.WebGLRenderer;
+
+  materials: Materials;
+  
+  pointGeometry: THREE.SphereGeometry;
+
+  directionArrows: THREE.ArrowHelper[] = [];
+  trackPoints: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial, THREE.Object3DEventMap>[] = [];
+
+  controls?: OrbitControls;
+
+//#region Setup
+
   constructor(private themeservice: ThemeService, private fileService: FileService) { 
     fileService.getFile().subscribe( this.loadNewCoaster.bind(this) )
 
-    this.pointMaterial = new THREE.MeshBasicMaterial({ 
-      color: new THREE.Color(themeservice.theme.primary)
-    });
+    this.materials = new Materials(themeservice.theme);
 
-    this.pointGeometry = new THREE.SphereGeometry(0.05)
-
-    this.gridMaterial = new THREE.LineBasicMaterial({ 
-      color: new THREE.Color(themeservice.theme.secondary)
-    });
+    this.pointGeometry = new THREE.SphereGeometry(0.1)
   }
 
   ngOnInit(): void {
     this.initThreeJsBox();
   }
-
-  scene: THREE.Scene = new THREE.Scene;
-  camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-  renderer?: THREE.WebGLRenderer;
-  
-  pointMaterial: THREE.MeshBasicMaterial;
-  pointGeometry: THREE.SphereGeometry;
-
-  gridMaterial: THREE.LineBasicMaterial;
-
-  directionArrows: THREE.ArrowHelper[] = [];
-
-  controls?: OrbitControls;
 
   setRendererSize(): void {
     const canvas = this.renderer?.domElement;
@@ -79,7 +76,7 @@ export class CanvasBoxComponent implements OnInit {
     const grid = new InfiniteGridHelper(
       1,
       10,
-      new THREE.Color(this.themeservice.theme.light),
+      new THREE.Color(this.themeservice.theme.border),
       500
     );
     this.scene.add(grid);
@@ -90,13 +87,35 @@ export class CanvasBoxComponent implements OnInit {
     this.scene.remove.apply(this.scene, this.scene.children);
   }
 
+  update(): void {
+    this.controls?.update(0.001);
+    this.renderer?.render( this.scene, this.camera );
+  }
+
+//#endregion
+
+//#region Coaster Setup
+
+  loadNewCoaster(coaster: openRollercoasterFile) {
+    this.clearScene();
+    this.addGrid();
+
+    coaster.trackPoints.forEach( point => {
+      this.createPoint(point)
+    });
+
+    this.colorElements(coaster);
+
+    this.setDirectionArrowVisible(false);
+  }
+
   createPoint(point: TrackPoint) {
     const pos = new THREE.Vector3(point.pos[0], point.pos[1], point.pos[2]);
     const up = new THREE.Vector3(point.up[0], point.up[1], point.up[2]);
     const right = new THREE.Vector3(point.right[0], point.right[1], point.right[2]);
     const forward = new THREE.Vector3(point.forward[0], point.forward[1], point.forward[2]);
 
-    const pointMesh = new THREE.Mesh( this.pointGeometry, this.pointMaterial )
+    const pointMesh = new THREE.Mesh( this.pointGeometry, this.materials.pointMaterial );
 
     pointMesh.position.set(pos.x,pos.y,pos.z);
 
@@ -107,19 +126,25 @@ export class CanvasBoxComponent implements OnInit {
     this.directionArrows.push(upArrrow, rightArrrow, forwardArrrow);
 
     this.scene.add( upArrrow, rightArrrow, forwardArrrow );
+
+    this.trackPoints.push(pointMesh)
+
     this.scene.add(pointMesh);
   }
 
-  loadNewCoaster(coaster: openRollercoasterFile) {
-    this.clearScene();
-    this.addGrid();
+  colorElements(coaster: openRollercoasterFile) {
+    coaster.trackElements.forEach((element,i) => {
+      const elementPoints = this.trackPoints.slice(element.startIndex, element.endIndex + 1);
 
-    coaster.trackPoints.forEach( point => {
-      this.createPoint(point)
+      elementPoints.forEach(point => {
+        point.material = this.materials.getElementMaterial(i);
+      })
     });
-
-    this.setDirectionArrowVisible(false);
   }
+
+//#endregion
+
+//#region Controls
 
   setDirectionArrowVisible(visible: boolean) {
     this.directionArrows.forEach(arrow => {
@@ -127,8 +152,5 @@ export class CanvasBoxComponent implements OnInit {
     });
   }
 
-  update(): void {
-    this.controls?.update(0.01);
-    this.renderer?.render( this.scene, this.camera );
-  }
+//#endregion
 }
