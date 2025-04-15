@@ -10,7 +10,7 @@ import { orcfHeader } from '../../models/openRollercoasterFile.interface';
 })
 export class MetadataComponent {
   constructor(private fileService: FileService) {
-    fileService.getFile().subscribe(fileContent => {
+    fileService.loadedFileChanged$.subscribe(fileContent => {
       this.metadata = fileContent.header;
     })
   }

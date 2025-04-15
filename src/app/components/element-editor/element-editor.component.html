@@ -1,6 +1,19 @@
 <div class="bg-secondary-subtle p-2 rounded border border-secondary-subtle">
-    Track Elements:
+    <span class="fw-semibold">Track Elements:</span>
     @for (element of elements; track $index) {
-        <div>{{element.type}}, {{element.startIndex}}, {{element.endIndex}}</div>
+        <div class="input-group input-group-sm mb-2">
+            <span class="input-group-text"><i class="bi bi-circle-fill {{elementColors[$index % elementColors.length]}}"></i></span>
+            <select class="form-select" (change)="changeElementType($event,$index)">
+                @for (elementType of elementTypes; track $index) {
+                    <option [value]="elementType" [selected]="elementType == element.type">{{elementType}}</option>
+                } 
+              </select>
+            <input type="number" class="form-control" [ngModel]="element.startIndex" (change)="changeElementStartIndex($event, $index)">
+            <input type="number" class="form-control" [ngModel]="element.endIndex" (change)="changeElementEndIndex($event, $index)">
+            <button class="btn btn-outline-secondary" type="button" (click)="deleteElement($index)"><i class="bi bi-trash-fill"></i></button>
+        </div>
     }
+    <div>
+        <button class="btn btn-outline-secondary" type="button" (click)="addElement()"><i class="bi bi-folder-plus"></i></button>
+    </div>
 </div>

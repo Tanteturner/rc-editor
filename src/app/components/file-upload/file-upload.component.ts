@@ -33,7 +33,7 @@ export class FileUploadComponent {
     try {
       const parsed = JSON.parse(content);
       console.log('Parsed coaster file:', parsed);
-      this.fileService.loadFile(parsed);
+      this.fileService.loadedFileChanged$.next(parsed);
     } catch (e) {
       console.error('Invalid file format', e);
     }

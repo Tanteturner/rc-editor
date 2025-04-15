@@ -3,7 +3,7 @@ import { InfiniteGridHelper } from './InfiniteGridHelper';
 import * as THREE from 'three';
 import { ThemeService } from '../../services/theme.service';
 import { FileService } from '../../services/file.service';
-import { openRollercoasterFile, TrackPoint } from '../../models/openRollercoasterFile.interface';
+import { openRollercoasterFile, TrackElement, TrackPoint } from '../../models/openRollercoasterFile.interface';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CanvasControlsComponent } from "../canvas-controls/canvas-controls.component";
 import { Materials } from './materials';
@@ -33,7 +33,8 @@ export class CanvasBoxComponent implements OnInit {
 //#region Setup
 
   constructor(private themeservice: ThemeService, private fileService: FileService) { 
-    fileService.getFile().subscribe( this.loadNewCoaster.bind(this) )
+    fileService.loadedFileChanged$.subscribe( this.loadNewCoaster.bind(this) )
+    fileService.trackElementsChanged$.subscribe( this.colorElements.bind(this) )
 
     this.materials = new Materials(themeservice.theme);
 
@@ -104,7 +105,7 @@ export class CanvasBoxComponent implements OnInit {
       this.createPoint(point)
     });
 
-    this.colorElements(coaster);
+    this.colorElements(coaster.trackElements);
 
     this.setDirectionArrowVisible(false);
   }
@@ -132,14 +133,20 @@ export class CanvasBoxComponent implements OnInit {
     this.scene.add(pointMesh);
   }
 
-  colorElements(coaster: openRollercoasterFile) {
-    coaster.trackElements.forEach((element,i) => {
+  colorElements(trackElements: TrackElement[]) {
+    this.trackPoints.forEach( point => {
+      point.material = this.materials.pointMaterial;
+    })
+
+    trackElements.forEach((element,i) => {
       const elementPoints = this.trackPoints.slice(element.startIndex, element.endIndex + 1);
+
 
       elementPoints.forEach(point => {
         point.material = this.materials.getElementMaterial(i);
       })
     });
+
   }
 
 //#endregion

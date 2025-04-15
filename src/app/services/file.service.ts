@@ -1,29 +1,44 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { openRollercoasterFile } from '../models/openRollercoasterFile.interface';
+import { Subject } from 'rxjs';
+import { openRollercoasterFile, TrackElement } from '../models/openRollercoasterFile.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FileService {
 
-  constructor() { }
+  constructor() {
+    this.loadedFileChanged$.subscribe( file => {
+      this._loadedFile = file;
+    });
+
+    this.trackElementsChanged$.subscribe( elements => {
+      this._loadedFile.trackElements = elements;
+    })
+  }
 
   private _loadedFile: openRollercoasterFile = {
     header: {
-      version: ""
+      version: ''
     },
     trackPoints: [],
     trackElements: []
   };
-  private _loadedFile$ = new BehaviorSubject(this._loadedFile);
 
-  loadFile(value: openRollercoasterFile): void {
-    this._loadedFile = value;
-    this._loadedFile$.next(this._loadedFile);
+  downloadFile() {
+    const json = JSON.stringify(this._loadedFile);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `export.orcf`;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
   }
 
-  getFile() {
-    return this._loadedFile$.asObservable();
-  }
+  loadedFileChanged$ = new Subject<openRollercoasterFile>();
+
+  trackElementsChanged$ = new Subject<TrackElement[]>();
 }

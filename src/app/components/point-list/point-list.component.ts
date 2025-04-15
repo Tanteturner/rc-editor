@@ -11,7 +11,7 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 })
 export class PointListComponent {
   constructor(private fileService: FileService) {
-    fileService.getFile().subscribe( fileContent => {
+    fileService.loadedFileChanged$.subscribe( fileContent => {
       this.points = fileContent?.trackPoints;
     })
   }
