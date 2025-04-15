@@ -1,0 +1,5 @@
+<ul cdkDropList [cdkDropListData]="points" (cdkDropListDropped)="drop($event)" class="h-100 overflow-scroll list-unstyled bg-secondary-subtle p-3 rounded border border-secondary-subtle">
+    @for (point of points; track $index) {
+        <li cdkDrag>{{point.pos[0]}}</li>
+    }
+</ul>
